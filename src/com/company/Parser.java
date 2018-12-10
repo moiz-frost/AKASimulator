@@ -40,6 +40,8 @@ public class Parser {
             split = line.split("[^\\w\\(\\)$+\\.-]+");
             switch (split[0]) {
                 case ".word":
+                case ".half":
+                case ".byte":
                     for (int j = 1; j < split.length; j++) {
                         machine.memory[machine.mp++] = Integer.parseInt(split[j]);
                     }
@@ -48,8 +50,8 @@ public class Parser {
                 case ".ascii":
                     boolean k = false;
                     split[1] = split[1].replaceAll("\"", "");
-                    String param = code.substring(code.indexOf("\"")+1,code.lastIndexOf("\""));
-                    param = param.replace("\\n","\n");
+                    String param = code.substring(code.indexOf("\"") + 1, code.lastIndexOf("\""));
+                    param = param.replace("\\n", "\n");
                     for (int j = 0; j < param.length(); j++, k = !k) {
                         if (!k) {
                             machine.memory[machine.mp] = param.charAt(j) << 16;
@@ -64,7 +66,9 @@ public class Parser {
                     }
                     break;
                 case ".space":
-                    machine.mp += Math.floor(Integer.parseInt(split[1])/4);
+                    machine.mp += Math.ceil(Integer.parseInt(split[1]) / 4);
+                    break;
+                case ".align":
                     break;
                 case ".text":
                     break OUTER;
@@ -82,7 +86,7 @@ public class Parser {
                 codeLabels.put(split[0], code.size());
                 if (split.length > 1) {
                     line = split[1];
-                }else {
+                } else {
                     continue;
                 }
             }
@@ -143,7 +147,7 @@ public class Parser {
                 resplit = tokens[2].split("\\(");
                 offset = resplit[0];
                 addr = resplit[1].replaceAll("\\)", "");
-                machine.registers[machine.regMap.get(tokens[1])] = machine.memory[machine.registers[machine.regMap.get(addr)]+ Integer.parseInt(offset)];
+                machine.registers[machine.regMap.get(tokens[1])] = machine.memory[machine.registers[machine.regMap.get(addr)] + Integer.parseInt(offset)];
                 break;
             case "sw":
                 resplit = tokens[2].split("\\(");
@@ -258,7 +262,7 @@ public class Parser {
                 } catch (NumberFormatException e) {
                     jumpTo = codeLabels.get(tokens[1]);
                 }
-                machine.registers[32] = jumpTo-1;
+                machine.registers[32] = jumpTo - 1;
                 break;
             case "jr":
                 machine.registers[32] = machine.registers[machine.regMap.get(tokens[1])];
@@ -267,9 +271,9 @@ public class Parser {
                 try {
                     jumpTo = Integer.parseInt(tokens[1]);
                 } catch (NumberFormatException e) {
-                    jumpTo = codeLabels.get(tokens[1]);                   
+                    jumpTo = codeLabels.get(tokens[1]);
                 }
-                machine.registers[32] = jumpTo-1;
+                machine.registers[32] = jumpTo - 1;
                 machine.registers[31] = pc;
                 break;
             case "syscall":
@@ -287,16 +291,16 @@ public class Parser {
                         machine.read_string();
                         break;
                     case 9:
-                        machine.registers[2]=machine.mp;
+                        machine.registers[2] = machine.mp;
                     case 10:
                     case 17:
-                        machine.registers[32]=code.size();
-                        break;                                     
+                        machine.registers[32] = code.size();
+                        break;
                 }
                 break;
             default:
                 System.out.println("Invalid command: " + tokens[0] + " on line#" + pc);
-                machine.registers[32]=code.size();
+                machine.registers[32] = code.size();
         }
     }
 }
