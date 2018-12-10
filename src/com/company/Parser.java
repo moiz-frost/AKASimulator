@@ -2,6 +2,7 @@ package com.company;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.management.MemoryType;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,21 +13,70 @@ public class Parser {
     ArrayList<String> code;
     Scanner input;
     AKAMips machine;
-    Map<String, Integer> labels;
+    Map<String, Integer> codeLabels;
+    Map<String, Integer> dataLabels;
 
     Parser(File file) {
         code = new ArrayList<String>();
-        labels = new LinkedHashMap<String, Integer>();
+        codeLabels = new LinkedHashMap<String, Integer>();
         try {
             input = new Scanner(file);
         } catch (FileNotFoundException e) {
             System.out.println("File Not Found.");
         }
-        while (input.hasNext()) {
+        OUTER: while (input.hasNext()) {
+            int i = 0;
             String line = input.nextLine();
+            line = line.split("#")[0].trim();
             String[] split = line.split(":");
             if (split.length > 1) {
-                labels.put(split[0], code.size());
+                dataLabels.put(split[0], i);
+                line = split[1].trim();
+            }
+            split = line.split("[^\\w\\(\\)$\\.]*");
+            switch (split[0]) {
+                case ".word":
+                    for (int j = 1; j < split.length; j++) {
+                        machine.memory[i++] = Integer.parseInt(split[j]);
+                    }
+                    break;
+//                case ".half":
+//                    for (int j = 1; j < split.length; j++) {
+//                        machine.memory[i++]=Integer.parseInt(split[j++])<<16;
+//                        if(j<split.)
+//                    }
+//                    break;
+//                case ".byte":
+//                    break;
+                case ".ascii":
+                    boolean k = false;
+                    for (int j = 0; j < split[1].length(); j++, k = !k) {
+                        if (!k) {
+                            machine.memory[i] = split[1].charAt(j) << 16;
+                        } else {
+                            machine.memory[i++] += split[1].charAt(j);
+                        }
+                    }
+                    if (!k) {
+                        machine.memory[i++] = '\u0000';
+                    } else {
+                        machine.memory[i++] += '\u0000';
+                    }
+                    break;
+                case ".space":
+                    i += Integer.parseInt(split[1]);
+                    break;
+                case ".text":
+                    break OUTER;
+            }
+
+        }
+        while (input.hasNext()) {
+            String line = input.nextLine();
+            line = line.split("#")[0];
+            String[] split = line.split(":");
+            if (split.length > 1) {
+                codeLabels.put(split[0], code.size());
                 line = split[1];
             }
             code.add(line);
@@ -49,15 +99,6 @@ public class Parser {
                 break;
             case "addi":
                 machine.registers[machine.regMap.get(tokens[1])] = machine.registers[machine.regMap.get(tokens[2])] + Integer.parseInt(tokens[3]);
-                break;
-            case "addu":
-                machine.registers[machine.regMap.get(tokens[1])] = machine.registers[machine.regMap.get(tokens[2])] + machine.registers[machine.regMap.get(tokens[3])]; // Not Supported
-                break;
-            case "subu":
-                machine.registers[machine.regMap.get(tokens[1])] = machine.registers[machine.regMap.get(tokens[2])] - machine.registers[machine.regMap.get(tokens[3])]; // Not Supported
-                break;
-            case "addiu":
-                machine.registers[machine.regMap.get(tokens[1])] = machine.registers[machine.regMap.get(tokens[2])] + machine.regMap.get(tokens[3]); // Not Supported
                 break;
             case "mul":
                 machine.registers[machine.regMap.get(tokens[1])] = machine.registers[machine.regMap.get(tokens[2])] * machine.registers[machine.regMap.get(tokens[3])];
@@ -95,21 +136,22 @@ public class Parser {
                 resplit = tokens[2].split("\\(");
                 offset = resplit[0];
                 addr = resplit[1].replaceAll("\\)", "");
-                machine.registers[machine.regMap.get(tokens[1])] = machine.ram[Integer.parseInt(addr) + Integer.parseInt(offset)];
+                machine.registers[machine.regMap.get(tokens[1])] = machine.memory[Integer.parseInt(addr) + Integer.parseInt(offset)];
                 break;
             case "sw":
                 resplit = tokens[2].split("\\(");
                 offset = resplit[0];
                 addr = resplit[1].replaceAll("\\)", "");
-                machine.ram[Integer.parseInt(addr) + Integer.parseInt(offset)] = machine.registers[machine.regMap.get(tokens[1])];
+                machine.memory[Integer.parseInt(addr) + Integer.parseInt(offset)] = machine.registers[machine.regMap.get(tokens[1])];
                 break;
             case "lui":
                 machine.registers[machine.regMap.get(tokens[1])] = machine.registers[Integer.parseInt(tokens[2])] << 16;
                 break;
             case "la":
-                code.set(pc, "lui $at, 4097");
-                code.add(pc + 1, "ori " + tokens[1] + ", $at, ");
-                machine.registers[32]--;
+//                code.set(pc, "lui $at, 4097");
+//                code.add(pc + 1, "ori " + tokens[1] + ", $at, ");
+//                machine.registers[32]--;
+                machine.registers[machine.regMap.get(tokens[1])] = codeLabels.get(tokens[2]);
                 break;
             case "li":
                 machine.registers[machine.regMap.get(tokens[1])] = Integer.parseInt(tokens[2]);
@@ -129,7 +171,7 @@ public class Parser {
                         jumpTo = Integer.parseInt(tokens[3]);
                         machine.registers[32] = jumpTo;
                     } catch (NumberFormatException e) {
-                        jumpTo = labels.get(tokens[3]);
+                        jumpTo = codeLabels.get(tokens[3]);
                         machine.registers[32] = jumpTo;
                     }
                 }
@@ -140,7 +182,7 @@ public class Parser {
                         jumpTo = Integer.parseInt(tokens[3]);
                         machine.registers[32] = jumpTo;
                     } catch (NumberFormatException e) {
-                        jumpTo = labels.get(tokens[3]);
+                        jumpTo = codeLabels.get(tokens[3]);
                         machine.registers[32] = jumpTo;
                     }
                 }
@@ -151,7 +193,7 @@ public class Parser {
                         jumpTo = Integer.parseInt(tokens[3]);
                         machine.registers[32] = jumpTo;
                     } catch (NumberFormatException e) {
-                        jumpTo = labels.get(tokens[3]);
+                        jumpTo = codeLabels.get(tokens[3]);
                         machine.registers[32] = jumpTo;
                     }
                 }
@@ -162,7 +204,7 @@ public class Parser {
                         jumpTo = Integer.parseInt(tokens[3]);
                         machine.registers[32] = jumpTo;
                     } catch (NumberFormatException e) {
-                        jumpTo = labels.get(tokens[3]);
+                        jumpTo = codeLabels.get(tokens[3]);
                         machine.registers[32] = jumpTo;
                     }
                 }
@@ -173,7 +215,7 @@ public class Parser {
                         jumpTo = Integer.parseInt(tokens[3]);
                         machine.registers[32] = jumpTo;
                     } catch (NumberFormatException e) {
-                        jumpTo = labels.get(tokens[3]);
+                        jumpTo = codeLabels.get(tokens[3]);
                         machine.registers[32] = jumpTo;
                     }
                 }
@@ -184,7 +226,7 @@ public class Parser {
                         jumpTo = Integer.parseInt(tokens[3]);
                         machine.registers[32] = jumpTo;
                     } catch (NumberFormatException e) {
-                        jumpTo = labels.get(tokens[3]);
+                        jumpTo = codeLabels.get(tokens[3]);
                         machine.registers[32] = jumpTo;
                     }
                 }
@@ -208,7 +250,7 @@ public class Parser {
                     jumpTo = Integer.parseInt(tokens[1]);
                     machine.registers[32] = jumpTo;
                 } catch (NumberFormatException e) {
-                    jumpTo = labels.get(tokens[1]);
+                    jumpTo = codeLabels.get(tokens[1]);
                     machine.registers[32] = jumpTo;
                 }
                 break;
@@ -220,12 +262,12 @@ public class Parser {
                     jumpTo = Integer.parseInt(tokens[1]);
                     machine.registers[32] = jumpTo;
                 } catch (NumberFormatException e) {
-                    jumpTo = labels.get(tokens[1]);
+                    jumpTo = codeLabels.get(tokens[1]);
                     machine.registers[32] = jumpTo;
                 }
-                machine.registers[31]=pc;
+                machine.registers[31] = pc;
                 break;
-            case "syscall":              
+            case "syscall":
                 break;
         }
     }

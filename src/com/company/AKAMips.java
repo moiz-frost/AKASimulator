@@ -7,7 +7,7 @@ import java.util.Map;
 // http://www.dsi.unive.it/~gasparetto/materials/MIPS_Instruction_Set.pdf
 public class AKAMips {
 
-    int ram[] = new int[1000];
+    int[] memory = new int[1000];
     int registers[] = new int[35];
     Map<String,Integer> regMap;
     Parser parser;
@@ -41,6 +41,7 @@ public class AKAMips {
         regMap.put("$pc", 32);
         regMap.put("$hi", 33);
         regMap.put("$lo", 34);
+        registers[29]=memory.length;
         
     }
 
