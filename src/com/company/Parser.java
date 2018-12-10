@@ -37,7 +37,7 @@ public class Parser {
                 dataLabels.put(split[0], machine.mp);
                 line = split[1].trim();
             }
-            split = line.split("[^\\w\\(\\)$\\.]+");
+            split = line.split("[^\\w\\(\\)$+\\.-]+");
             switch (split[0]) {
                 case ".word":
                     for (int j = 1; j < split.length; j++) {
@@ -92,7 +92,7 @@ public class Parser {
 
     void parseLine(int pc) {
         String line = code.get(pc);
-        String[] tokens = line.split("[^\\w\\(\\)$]+");
+        String[] tokens = line.split("[^\\w\\(\\)$+\\.-]+");
         String[] resplit;
         String addr;
         String offset;
@@ -143,13 +143,13 @@ public class Parser {
                 resplit = tokens[2].split("\\(");
                 offset = resplit[0];
                 addr = resplit[1].replaceAll("\\)", "");
-                machine.registers[machine.regMap.get(tokens[1])] = machine.memory[machine.regMap.get(addr) + Integer.parseInt(offset)];
+                machine.registers[machine.regMap.get(tokens[1])] = machine.memory[machine.registers[machine.regMap.get(addr)]+ Integer.parseInt(offset)];
                 break;
             case "sw":
                 resplit = tokens[2].split("\\(");
                 offset = resplit[0];
                 addr = resplit[1].replaceAll("\\)", "");
-                machine.memory[machine.regMap.get(addr) + Integer.parseInt(offset)] = machine.registers[machine.regMap.get(tokens[1])];
+                machine.memory[machine.registers[machine.regMap.get(addr)] + Integer.parseInt(offset)] = machine.registers[machine.regMap.get(tokens[1])];
                 break;
             case "lui":
                 machine.registers[machine.regMap.get(tokens[1])] = machine.registers[Integer.parseInt(tokens[2])] << 16;
@@ -255,11 +255,10 @@ public class Parser {
             case "j":
                 try {
                     jumpTo = Integer.parseInt(tokens[1]);
-                    machine.registers[32] = jumpTo;
                 } catch (NumberFormatException e) {
                     jumpTo = codeLabels.get(tokens[1]);
-                    machine.registers[32] = jumpTo;
                 }
+                machine.registers[32] = jumpTo-1;
                 break;
             case "jr":
                 machine.registers[32] = machine.registers[machine.regMap.get(tokens[1])];
@@ -267,11 +266,10 @@ public class Parser {
             case "jal":
                 try {
                     jumpTo = Integer.parseInt(tokens[1]);
-                    machine.registers[32] = jumpTo;
                 } catch (NumberFormatException e) {
-                    jumpTo = codeLabels.get(tokens[1]);
-                    machine.registers[32] = jumpTo;
+                    jumpTo = codeLabels.get(tokens[1]);                   
                 }
+                machine.registers[32] = jumpTo-1;
                 machine.registers[31] = pc;
                 break;
             case "syscall":
