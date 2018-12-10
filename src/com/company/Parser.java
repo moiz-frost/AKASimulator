@@ -16,40 +16,37 @@ public class Parser {
     Map<String, Integer> codeLabels;
     Map<String, Integer> dataLabels;
 
-    Parser(File file) {
+    Parser(AKAMips m) {
+        machine = m;
+        File file = m.prog;
         code = new ArrayList<String>();
         codeLabels = new LinkedHashMap<String, Integer>();
+        dataLabels = new LinkedHashMap<String, Integer>();
         try {
             input = new Scanner(file);
         } catch (FileNotFoundException e) {
             System.out.println("File Not Found.");
         }
+        int i = 0;
         OUTER: while (input.hasNext()) {
-            int i = 0;
-            String line = input.nextLine();
+            
+            String line = input.nextLine().trim();
             line = line.split("#")[0].trim();
             String[] split = line.split(":");
             if (split.length > 1) {
                 dataLabels.put(split[0], i);
                 line = split[1].trim();
             }
-            split = line.split("[^\\w\\(\\)$\\.]*");
+            split = line.split("[^\\w\\(\\)$\\.]+");
             switch (split[0]) {
                 case ".word":
                     for (int j = 1; j < split.length; j++) {
                         machine.memory[i++] = Integer.parseInt(split[j]);
                     }
                     break;
-//                case ".half":
-//                    for (int j = 1; j < split.length; j++) {
-//                        machine.memory[i++]=Integer.parseInt(split[j++])<<16;
-//                        if(j<split.)
-//                    }
-//                    break;
-//                case ".byte":
-//                    break;
                 case ".ascii":
                     boolean k = false;
+                    split[1]=split[1].replaceAll("\"","");
                     for (int j = 0; j < split[1].length(); j++, k = !k) {
                         if (!k) {
                             machine.memory[i] = split[1].charAt(j) << 16;
@@ -69,11 +66,10 @@ public class Parser {
                 case ".text":
                     break OUTER;
             }
-
         }
         while (input.hasNext()) {
-            String line = input.nextLine();
-            line = line.split("#")[0];
+            String line = input.nextLine().trim();
+            line = line.split("#")[0].trim();
             String[] split = line.split(":");
             if (split.length > 1) {
                 codeLabels.put(split[0], code.size());
@@ -85,7 +81,7 @@ public class Parser {
 
     void parseLine(int pc) {
         String line = code.get(pc);
-        String[] tokens = line.split("[^\\w\\(\\)$]*");
+        String[] tokens = line.split("[^\\w\\(\\)$]+");
         String[] resplit;
         String addr;
         String offset;
@@ -151,7 +147,7 @@ public class Parser {
 //                code.set(pc, "lui $at, 4097");
 //                code.add(pc + 1, "ori " + tokens[1] + ", $at, ");
 //                machine.registers[32]--;
-                machine.registers[machine.regMap.get(tokens[1])] = codeLabels.get(tokens[2]);
+                machine.registers[machine.regMap.get(tokens[1])] = dataLabels.get(tokens[2]);
                 break;
             case "li":
                 machine.registers[machine.regMap.get(tokens[1])] = Integer.parseInt(tokens[2]);
@@ -268,6 +264,26 @@ public class Parser {
                 machine.registers[31] = pc;
                 break;
             case "syscall":
+                switch(machine.registers[2]){
+                    case 1:
+                        machine.print_int();
+                        break;
+                    case 2:
+                        machine.print_float();
+                        break;
+                    case 4:
+                        machine.print_string();
+                        break;
+                    case 5:
+                        machine.read_int();
+                        break;
+                    case 6: 
+                        machine.read_float();
+                        break;
+                    case 8:
+                        machine.read_string();
+                        break;
+                }
                 break;
         }
     }
