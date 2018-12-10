@@ -27,41 +27,44 @@ public class Parser {
         } catch (FileNotFoundException e) {
             System.out.println("File Not Found.");
         }
-        int i = 0;
-        OUTER: while (input.hasNext()) {
-            
+        OUTER:
+        while (input.hasNext()) {
             String line = input.nextLine().trim();
+            String code = line;
             line = line.split("#")[0].trim();
             String[] split = line.split(":");
             if (split.length > 1) {
-                dataLabels.put(split[0], i);
+                dataLabels.put(split[0], machine.mp);
                 line = split[1].trim();
             }
             split = line.split("[^\\w\\(\\)$\\.]+");
             switch (split[0]) {
                 case ".word":
                     for (int j = 1; j < split.length; j++) {
-                        machine.memory[i++] = Integer.parseInt(split[j]);
+                        machine.memory[machine.mp++] = Integer.parseInt(split[j]);
                     }
                     break;
+                case ".asciiz":
                 case ".ascii":
                     boolean k = false;
-                    split[1]=split[1].replaceAll("\"","");
-                    for (int j = 0; j < split[1].length(); j++, k = !k) {
+                    split[1] = split[1].replaceAll("\"", "");
+                    String param = code.substring(code.indexOf("\"")+1,code.lastIndexOf("\""));
+                    param = param.replace("\\n","\n");
+                    for (int j = 0; j < param.length(); j++, k = !k) {
                         if (!k) {
-                            machine.memory[i] = split[1].charAt(j) << 16;
+                            machine.memory[machine.mp] = param.charAt(j) << 16;
                         } else {
-                            machine.memory[i++] += split[1].charAt(j);
+                            machine.memory[machine.mp++] += param.charAt(j);
                         }
                     }
                     if (!k) {
-                        machine.memory[i++] = '\u0000';
+                        machine.memory[machine.mp++] = '\u0000';
                     } else {
-                        machine.memory[i++] += '\u0000';
+                        machine.memory[machine.mp++] += '\u0000';
                     }
                     break;
                 case ".space":
-                    i += Integer.parseInt(split[1]);
+                    machine.mp += Integer.parseInt(split[1]);
                     break;
                 case ".text":
                     break OUTER;
@@ -69,11 +72,19 @@ public class Parser {
         }
         while (input.hasNext()) {
             String line = input.nextLine().trim();
-            line = line.split("#")[0].trim();
-            String[] split = line.split(":");
-            if (split.length > 1) {
+            String[] hashSplit = line.split("#.*");
+            if (hashSplit.length == 0 || line.length() == 0) {
+                continue;
+            }
+            line = hashSplit[0].trim();
+            if (line.contains(":")) {
+                String[] split = line.split(":");
                 codeLabels.put(split[0], code.size());
-                line = split[1];
+                if (split.length > 1) {
+                    line = split[1];
+                }else {
+                    continue;
+                }
             }
             code.add(line);
         }
@@ -132,13 +143,13 @@ public class Parser {
                 resplit = tokens[2].split("\\(");
                 offset = resplit[0];
                 addr = resplit[1].replaceAll("\\)", "");
-                machine.registers[machine.regMap.get(tokens[1])] = machine.memory[Integer.parseInt(addr) + Integer.parseInt(offset)];
+                machine.registers[machine.regMap.get(tokens[1])] = machine.memory[machine.regMap.get(addr) + Integer.parseInt(offset)];
                 break;
             case "sw":
                 resplit = tokens[2].split("\\(");
                 offset = resplit[0];
                 addr = resplit[1].replaceAll("\\)", "");
-                machine.memory[Integer.parseInt(addr) + Integer.parseInt(offset)] = machine.registers[machine.regMap.get(tokens[1])];
+                machine.memory[machine.regMap.get(addr) + Integer.parseInt(offset)] = machine.registers[machine.regMap.get(tokens[1])];
                 break;
             case "lui":
                 machine.registers[machine.regMap.get(tokens[1])] = machine.registers[Integer.parseInt(tokens[2])] << 16;
@@ -264,12 +275,9 @@ public class Parser {
                 machine.registers[31] = pc;
                 break;
             case "syscall":
-                switch(machine.registers[2]){
+                switch (machine.registers[2]) {
                     case 1:
                         machine.print_int();
-                        break;
-                    case 2:
-                        machine.print_float();
                         break;
                     case 4:
                         machine.print_string();
@@ -277,14 +285,14 @@ public class Parser {
                     case 5:
                         machine.read_int();
                         break;
-                    case 6: 
-                        machine.read_float();
-                        break;
                     case 8:
                         machine.read_string();
                         break;
                 }
                 break;
+            default:
+                System.out.println("Invalid command: " + tokens[0] + " on line#" + pc);
+                System.exit(0);
         }
     }
 }

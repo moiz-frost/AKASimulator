@@ -1,6 +1,7 @@
 package com.company;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -10,15 +11,16 @@ public class AKAMips {
 
     public static void main(String[] args) {
         File file;
-        file = new File("program.asm");
+        file = new File("fibonacci.asm");
         AKAMips asm = new AKAMips(file);
         asm.exec();
         System.out.println("shit");
-       
+
     }
-    
+
     int[] memory = new int[1000];
     int registers[] = new int[35];
+    int mp = 0;
     Map<String, Integer> regMap;
     Parser parser;
     GUI gui;
@@ -26,7 +28,7 @@ public class AKAMips {
     File prog;
 
     AKAMips(File file) {
-        prog=file;
+        prog = file;
         input = new Scanner(System.in);
         parser = new Parser(this);
         regMap = new LinkedHashMap<String, Integer>();
@@ -57,17 +59,15 @@ public class AKAMips {
         registers[29] = memory.length;
 
     }
-    void exec(){
+
+    void exec() {
         for (registers[32] = 0; registers[32] < parser.code.size(); registers[32]++) {
             parser.parseLine(registers[32]);
         }
     }
-    void print_int() {
-        System.out.println(registers[4]);
-    }
 
-    void print_float() {
-        System.out.println(registers[4]);
+    void print_int() {
+        System.out.print(registers[4]);
     }
 
     void print_string() {
@@ -88,18 +88,27 @@ public class AKAMips {
                 s += c;
             }
         }
-        System.out.println(s);
+        System.out.print(s);
     }
-
     void read_int() {
-        input.nextInt();
+        registers[2] = input.nextInt();
     }
-
-    void read_float() {
-        input.nextFloat();
-    }
-
     void read_string() {
-        input.next(".*\\n\\n");
+        String s = input.next(".*\\n\\n");
+        boolean k = false;
+        for (int j = 0; j < s.length(); j++, k = !k) {
+            if (!k) {
+                memory[mp] = s.charAt(j) << 16;
+            } else {
+                memory[mp++] += s.charAt(j);
+            }
+        }
+        if (!k) {
+            memory[mp++] = '\u0000';
+        } else {
+            memory[mp++] += '\u0000';
+        }
+
     }
+
 }
