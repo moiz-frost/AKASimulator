@@ -64,7 +64,7 @@ public class Parser {
                     }
                     break;
                 case ".space":
-                    machine.mp += Integer.parseInt(split[1]);
+                    machine.mp += Math.floor(Integer.parseInt(split[1])/4);
                     break;
                 case ".text":
                     break OUTER;
@@ -286,15 +286,17 @@ public class Parser {
                     case 8:
                         machine.read_string();
                         break;
+                    case 9:
+                        machine.registers[2]=machine.mp;
                     case 10:
-                        System.exit(0);
-                        break;
-                        
+                    case 17:
+                        machine.registers[32]=code.size();
+                        break;                                     
                 }
                 break;
             default:
                 System.out.println("Invalid command: " + tokens[0] + " on line#" + pc);
-                System.exit(0);
+                machine.registers[32]=code.size();
         }
     }
 }
