@@ -288,6 +288,10 @@ public class Parser {
                     case 8:
                         machine.read_string();
                         break;
+                    case 10:
+                        System.exit(0);
+                        break;
+                        
                 }
                 break;
             default:
