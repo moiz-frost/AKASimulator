@@ -11,26 +11,26 @@ public class AKAMips {
 
     public static void main(String[] args) {
         File file;
-        file = new File("Math.asm");
+        file = new File("loop_func.asm");
         AKAMips asm = new AKAMips();
         asm.loadFile(file);
         asm.exec();
-        file = new File("program.asm");
-        asm = new AKAMips();
-        asm.loadFile(file);
-        asm.exec();
-        file = new File("IO.asm");
-        asm = new AKAMips();
-        asm.loadFile(file);
-        asm.exec();
-        file = new File("fibonacci.asm");
-        asm = new AKAMips();
-        asm.loadFile(file);
-        asm.exec();
-        file = new File("loop.asm");
-        asm = new AKAMips();
-        asm.loadFile(file);
-        asm.exec();
+//        file = new File("program.asm");
+//        asm = new AKAMips();
+//        asm.loadFile(file);
+//        asm.exec();
+//        file = new File("IO.asm");
+//        asm = new AKAMips();
+//        asm.loadFile(file);
+//        asm.exec();
+//        file = new File("fibonacci.asm");
+//        asm = new AKAMips();
+//        asm.loadFile(file);
+//        asm.exec();
+//        file = new File("loop.asm");
+//        asm = new AKAMips();
+//        asm.loadFile(file);
+//        asm.exec();
     }
 
     int[] memory = new int[1000];

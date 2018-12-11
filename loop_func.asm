@@ -1,4 +1,9 @@
 # Simple routine to demo a loop
+	# Start .data segment (data!)
+	.data
+msg1:	.asciiz	"Number of integers (N)?  "
+msg2:	.asciiz	"Sum = "
+lf:     .asciiz	"\n"
 # Compute the sum of N integers: 1 + 2 + 3 + ... + N
 # Same result as example4, but here a function performs the
 # addition operation:  int add(int num1, int num2)
@@ -7,7 +12,6 @@
 	
 	.text
 
-	.globl	main
 main:
 	# Register assignments
 	# $s0 = N
@@ -90,8 +94,3 @@ add2:	# Store registers on the stack that we will overwrite (just $s0)
 	
 # ------------------------------------------------------------------
 	
-	# Start .data segment (data!)
-	.data
-msg1:	.asciiz	"Number of integers (N)?  "
-msg2:	.asciiz	"Sum = "
-lf:     .asciiz	"\n"
