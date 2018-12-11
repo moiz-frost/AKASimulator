@@ -11,11 +11,26 @@ public class AKAMips {
 
     public static void main(String[] args) {
         File file;
-        file = new File("fibonacci.asm");
-        AKAMips asm = new AKAMips(file);
+        file = new File("Math.asm");
+        AKAMips asm = new AKAMips();
+        asm.loadFile(file);
         asm.exec();
-        System.out.println("shit");
-
+        file = new File("program.asm");
+        asm = new AKAMips();
+        asm.loadFile(file);
+        asm.exec();
+        file = new File("IO.asm");
+        asm = new AKAMips();
+        asm.loadFile(file);
+        asm.exec();
+        file = new File("fibonacci.asm");
+        asm = new AKAMips();
+        asm.loadFile(file);
+        asm.exec();
+        file = new File("loop.asm");
+        asm = new AKAMips();
+        asm.loadFile(file);
+        asm.exec();
     }
 
     int[] memory = new int[1000];
@@ -27,10 +42,8 @@ public class AKAMips {
     Scanner input;
     File prog;
 
-    AKAMips(File file) {
-        prog = file;
+    AKAMips() {
         input = new Scanner(System.in);
-        parser = new Parser(this);
         regMap = new LinkedHashMap<String, Integer>();
         regMap.put("$zero", 0);
         regMap.put("$at", 1);
@@ -59,10 +72,14 @@ public class AKAMips {
         registers[29] = memory.length;
 
     }
-
+    void loadFile(File file){
+        prog = file;
+        parser = new Parser(this);
+    }
     void exec() {
-        for (registers[32] = 0; registers[32] < parser.code.size(); registers[32]++) {
+        for (registers[32] = 0; registers[32] < parser.code.size(); ) {
             parser.parseLine(registers[32]);
+            registers[32]++;
         }
     }
 

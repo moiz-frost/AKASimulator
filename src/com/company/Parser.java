@@ -95,7 +95,7 @@ public class Parser {
     }
 
     void parseLine(int pc) {
-        String line = code.get(pc);
+        String line = code.get(pc).trim();
         String[] tokens = line.split("[^\\w\\(\\)$+\\.-]+");
         String[] resplit;
         String addr;
@@ -180,10 +180,10 @@ public class Parser {
                 if (machine.registers[machine.regMap.get(tokens[1])] == machine.registers[machine.regMap.get(tokens[2])]) {
                     try {
                         jumpTo = Integer.parseInt(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     } catch (NumberFormatException e) {
                         jumpTo = codeLabels.get(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     }
                 }
                 break;
@@ -191,10 +191,10 @@ public class Parser {
                 if (machine.registers[machine.regMap.get(tokens[1])] != machine.registers[machine.regMap.get(tokens[2])]) {
                     try {
                         jumpTo = Integer.parseInt(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     } catch (NumberFormatException e) {
                         jumpTo = codeLabels.get(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     }
                 }
                 break;
@@ -202,10 +202,10 @@ public class Parser {
                 if (machine.registers[machine.regMap.get(tokens[1])] > machine.registers[machine.regMap.get(tokens[2])]) {
                     try {
                         jumpTo = Integer.parseInt(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     } catch (NumberFormatException e) {
                         jumpTo = codeLabels.get(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     }
                 }
                 break;
@@ -213,10 +213,10 @@ public class Parser {
                 if (machine.registers[machine.regMap.get(tokens[1])] >= machine.registers[machine.regMap.get(tokens[2])]) {
                     try {
                         jumpTo = Integer.parseInt(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     } catch (NumberFormatException e) {
                         jumpTo = codeLabels.get(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     }
                 }
                 break;
@@ -224,10 +224,10 @@ public class Parser {
                 if (machine.registers[machine.regMap.get(tokens[1])] < machine.registers[machine.regMap.get(tokens[2])]) {
                     try {
                         jumpTo = Integer.parseInt(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     } catch (NumberFormatException e) {
                         jumpTo = codeLabels.get(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     }
                 }
                 break;
@@ -235,10 +235,10 @@ public class Parser {
                 if (machine.registers[machine.regMap.get(tokens[1])] <= machine.registers[machine.regMap.get(tokens[2])]) {
                     try {
                         jumpTo = Integer.parseInt(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     } catch (NumberFormatException e) {
                         jumpTo = codeLabels.get(tokens[3]);
-                        machine.registers[32] = jumpTo;
+                        machine.registers[32] = jumpTo-1;
                     }
                 }
                 break;
@@ -265,7 +265,7 @@ public class Parser {
                 machine.registers[32] = jumpTo - 1;
                 break;
             case "jr":
-                machine.registers[32] = machine.registers[machine.regMap.get(tokens[1])];
+                machine.registers[32] = machine.registers[machine.regMap.get(tokens[1])]-1;
                 break;
             case "jal":
                 try {
@@ -274,7 +274,7 @@ public class Parser {
                     jumpTo = codeLabels.get(tokens[1]);
                 }
                 machine.registers[32] = jumpTo - 1;
-                machine.registers[31] = pc;
+                machine.registers[31] = pc+1;
                 break;
             case "syscall":
                 switch (machine.registers[2]) {
